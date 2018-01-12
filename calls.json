@@ -1,0 +1,617 @@
+{
+	"variables": [],
+	"info": {
+		"name": "Getting started with CAM APIs",
+		"_postman_id": "9b5ce4ad-cce1-7dc6-6059-fff90d676866",
+		"description": "This Postman collection is a small primer to demonstrate how to setup authorization and drive a few simple CAM REST APIs.",
+		"schema": "https://schema.getpostman.com/json/collection/v2.0.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "Get bearer token for Authorization header",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"type": "text/javascript",
+						"exec": [
+							"tests[\"Status code is 200\"] = responseCode.code === 200;",
+							"",
+							"var jsonData = JSON.parse(responseBody);",
+							"postman.setGlobalVariable(\"CAMBearerToken\", \"Bearer \" + jsonData.access_token);"
+						]					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/x-www-form-urlencoded"
+					},
+					{
+						"key": "charset",
+						"value": "UTF-8"
+					}
+				],
+				"body": {
+					"mode": "urlencoded",
+					"urlencoded": [
+						{
+							"key": "grant_type",
+							"value": "password",
+							"type": "text",
+							"description": ""
+						},
+						{
+							"key": "username",
+							"value": "{{cam_username}}",
+							"type": "text",
+							"description": ""
+						},
+						{
+							"key": "password",
+							"value": "{{cam_password}}",
+							"type": "text",
+							"description": ""
+						},
+						{
+							"key": "scope",
+							"value": "openid",
+							"type": "text",
+							"description": ""
+						}
+					]				},
+				"url": "https://{{cam_host}}:8443/v1/auth/identitytoken",
+				"description": "Authenticate to the server using your IBM Cloud Private user credentials"
+			},
+			"response": []		},
+		{
+			"name": "Get values to configure query parameters",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"type": "text/javascript",
+						"exec": [
+							"tests[\"Status code is 200\"] = responseCode.code === 200;",
+							"var responseJSON = JSON.parse(responseBody);",
+							"",
+							"// Save tenantId",
+							"postman.setGlobalVariable(\"tenantId\", responseJSON.id);",
+							"",
+							"// Parse the first namespace",
+							"postman.setGlobalVariable(\"namespaceId\", responseJSON.namespaces[0].uid);",
+							"if(responseJSON.namespaces[0].teamId) {",
+							" postman.setGlobalVariable(\"teamId\", responseJSON.namespaces[0].teamId);",
+							"} else {",
+							" // ADMIN users just need to use 'all' as the team value",
+							" postman.setGlobalVariable(\"teamId\", \"all\");",
+							"}",
+							"",
+							"",
+							""
+						]					}
+				}
+			],
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					},
+					{
+						"key": "Authorization",
+						"value": "{{CAMBearerToken}}"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": ""
+				},
+				"url": "https://{{cam_host}}:30000/cam/tenant/api/v1/tenants/getTenantOnPrem",
+				"description": "Get the tenant information used in the next REST API queries. We also need to pick a namespace for context. This sample simply selects the first namespace in the returned list."
+			},
+			"response": []		},
+		{
+			"name": "Get the list of cloud connections",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"type": "text/javascript",
+						"exec": [
+							"tests[\"Status code is 200\"] = responseCode.code === 200;",
+							"var responseJSON = JSON.parse(responseBody);",
+							""
+						]					}
+				}
+			],
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					},
+					{
+						"key": "Authorization",
+						"value": "{{CAMBearerToken}}"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": ""
+				},
+				"url": {
+					"raw": "https://{{cam_host}}:30000/cam/api/v1/cloudconnections?tenantId={{tenantId}}&ace_orgGuid={{teamId}}",
+					"protocol": "https",
+					"host": [
+						"{{cam_host}}"
+					],
+					"port": "30000",
+					"path": [
+						"cam",
+						"api",
+						"v1",
+						"cloudconnections"
+					],
+					"query": [
+						{
+							"key": "tenantId",
+							"value": "{{tenantId}}",
+							"equals": true
+						},
+						{
+							"key": "ace_orgGuid",
+							"value": "{{teamId}}",
+							"equals": true
+						}
+					]				},
+				"description": ""
+			},
+			"response": []		},
+		{
+			"name": "Get the list of templates",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"type": "text/javascript",
+						"exec": [
+							"tests[\"Status code is 200\"] = responseCode.code === 200;",
+							"var responseJSON = JSON.parse(responseBody);",
+							""
+						]					}
+				}
+			],
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					},
+					{
+						"key": "Authorization",
+						"value": "{{CAMBearerToken}}"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": ""
+				},
+				"url": {
+					"raw": "https://{{cam_host}}:30000/cam/api/v1/templates/?tenantId={{tenantId}}&ace_orgGuid={{teamId}}",
+					"protocol": "https",
+					"host": [
+						"{{cam_host}}"
+					],
+					"port": "30000",
+					"path": [
+						"cam",
+						"api",
+						"v1",
+						"templates",
+						""
+					],
+					"query": [
+						{
+							"key": "tenantId",
+							"value": "{{tenantId}}",
+							"equals": true
+						},
+						{
+							"key": "ace_orgGuid",
+							"value": "{{teamId}}",
+							"equals": true
+						}
+					]				},
+				"description": ""
+			},
+			"response": []		},
+		{
+			"name": "Get the list of deployed templates (stacks)",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"type": "text/javascript",
+						"exec": [
+							"tests[\"Status code is 200\"] = responseCode.code === 200;",
+							"var responseJSON = JSON.parse(responseBody);",
+							""
+						]					}
+				}
+			],
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					},
+					{
+						"key": "Authorization",
+						"value": "{{CAMBearerToken}}"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": ""
+				},
+				"url": {
+					"raw": "https://{{cam_host}}:30000/cam/api/v1/stacks?tenantId={{tenantId}}&ace_orgGuid={{teamId}}&cloudOE_spaceGuid={{namespaceId}}",
+					"protocol": "https",
+					"host": [
+						"{{cam_host}}"
+					],
+					"port": "30000",
+					"path": [
+						"cam",
+						"api",
+						"v1",
+						"stacks"
+					],
+					"query": [
+						{
+							"key": "tenantId",
+							"value": "{{tenantId}}",
+							"equals": true
+						},
+						{
+							"key": "ace_orgGuid",
+							"value": "{{teamId}}",
+							"equals": true
+						},
+						{
+							"key": "cloudOE_spaceGuid",
+							"value": "{{namespaceId}}",
+							"equals": true
+						}
+					]				},
+				"description": ""
+			},
+			"response": []		},
+		{
+			"name": "Find IBM Cloud provider",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"type": "text/javascript",
+						"exec": [
+							"tests[\"Status code is 200\"] = responseCode.code === 200;",
+							"",
+							"var jsonData = JSON.parse(responseBody);",
+							"postman.setGlobalVariable(\"IBMCloudProviderID\", jsonData.id);"
+						]					}
+				}
+			],
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					},
+					{
+						"key": "Authorization",
+						"value": "{{CAMBearerToken}}"
+					}
+				],
+				"body": {},
+				"url": {
+					"raw": "https://{{cam_host}}:30000/cam/api/v1/providers/findOne?&tenantId={{tenantId}}&ace_orgGuid={{teamId}}&filter={\"where\": {\"name\": \"IBM\" }}",
+					"protocol": "https",
+					"host": [
+						"{{cam_host}}"
+					],
+					"port": "30000",
+					"path": [
+						"cam",
+						"api",
+						"v1",
+						"providers",
+						"findOne"
+					],
+					"query": [
+						{
+							"key": "tenantId",
+							"value": "{{tenantId}}",
+							"equals": true
+						},
+						{
+							"key": "ace_orgGuid",
+							"value": "{{teamId}}",
+							"equals": true
+						},
+						{
+							"key": "filter",
+							"value": "{\"where\": {\"name\": \"IBM\" }}",
+							"equals": true
+						},
+						{
+							"key": "",
+							"value": ""
+						}
+					]				},
+				"description": ""
+			},
+			"response": []		},
+		{
+			"name": "Create IBM Cloud connection",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"type": "text/javascript",
+						"exec": [
+							"tests[\"Status code is 200\"] = responseCode.code === 200;",
+							"var responseJSON = JSON.parse(responseBody);",
+							"tests[\"Connection validates successfully\"] = (true === responseJSON.validate);",
+							"",
+							"postman.setGlobalVariable(\"IBMConnection\", responseJSON.id);"
+						]					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					},
+					{
+						"key": "Authorization",
+						"value": "{{CAMBearerToken}}"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n \"name\": \"SL Dev Acct\",\r\n \"description\": \"SL Dev Acct\",\r\n \"configuration_parameters\": [],\r\n \"connection_parameters\": [\r\n {\r\n \"name\": \"softlayer_username\",\r\n \"value\": \"{{IBM_Cloud_username}}\",\r\n \"secured\": \"false\"\r\n },\r\n {\r\n \"name\": \"softlayer_api_key\",\r\n \"value\": \"{{IBM_Cloud_apikey}}\",\r\n \"secured\": \"true\"\r\n }\r\n ],\r\n \"additional_parameters\": [\r\n {}\r\n ],\r\n \"providerId\": \"{{IBMCloudProviderID}}\"\r\n}"
+				},
+				"url": {
+					"raw": "https://{{cam_host}}:30000/cam/api/v1/cloudconnections?tenantId={{tenantId}}&ace_orgGuid={{teamId}}",
+					"protocol": "https",
+					"host": [
+						"{{cam_host}}"
+					],
+					"port": "30000",
+					"path": [
+						"cam",
+						"api",
+						"v1",
+						"cloudconnections"
+					],
+					"query": [
+						{
+							"key": "tenantId",
+							"value": "{{tenantId}}",
+							"equals": true
+						},
+						{
+							"key": "ace_orgGuid",
+							"value": "{{teamId}}",
+							"equals": true
+						}
+					]				},
+				"description": "Local orpheus-iaas\nPopulate cloud connections with bgower vSphere dev account"
+			},
+			"response": []		},
+		{
+			"name": "Find single VM IBM Cloud template",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"type": "text/javascript",
+						"exec": [
+							"tests[\"Status code is 200\"] = responseCode.code === 200;",
+							"var responseJSON = JSON.parse(responseBody);",
+							"",
+							"postman.setGlobalVariable(\"templateId\", responseJSON[0].id);",
+							"",
+							""
+						]					}
+				}
+			],
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					},
+					{
+						"key": "Authorization",
+						"value": "{{CAMBearerToken}}"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": ""
+				},
+				"url": {
+					"raw": "https://{{cam_host}}:30000/cam/api/v1/templates?tenantId={{tenantId}}&ace_orgGuid={{teamId}}&filter={\"where\": {\"name\": \"Virtual Server with SSH key\" }}",
+					"protocol": "https",
+					"host": [
+						"{{cam_host}}"
+					],
+					"port": "30000",
+					"path": [
+						"cam",
+						"api",
+						"v1",
+						"templates"
+					],
+					"query": [
+						{
+							"key": "tenantId",
+							"value": "{{tenantId}}",
+							"equals": true
+						},
+						{
+							"key": "ace_orgGuid",
+							"value": "{{teamId}}",
+							"equals": true
+						},
+						{
+							"key": "filter",
+							"value": "{\"where\": {\"name\": \"Virtual Server with SSH key\" }}",
+							"equals": true
+						}
+					]				},
+				"description": ""
+			},
+			"response": []		},
+		{
+			"name": "Deploy single VM template stack instance",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"type": "text/javascript",
+						"exec": [
+							"tests[\"Status code is 200\"] = responseCode.code === 200;",
+							"var responseJSON = JSON.parse(responseBody);",
+							"postman.setGlobalVariable(\"ibmStackId\", responseJSON.id);"
+						]					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					},
+					{
+						"key": "Authorization",
+						"value": "{{CAMBearerToken}}"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n\t\"name\": \"IBMCloudTest\",\r\n\t\"cloud_connection_ids\": [\"{{IBMConnection}}\"],\r\n\t\"templateId\": \"{{templateId}}\",\r\n\t\"forceCreate\": \"true\",\r\n \"parameters\": [\r\n {\r\n \"description\": \"Public SSH key used to connect to the virtual guest\",\r\n \"hidden\": false,\r\n \"immutable\": false,\r\n \"label\": \"Public SSH Key\",\r\n \"name\": \"public_ssh_key\",\r\n \"required\": true,\r\n \"secured\": false,\r\n \"type\": \"string\",\r\n \"value\": \"{{public_ssh_key}}\"\r\n },\r\n {\r\n \"description\": \"SoftLayer datacenter where infrastructure resources will be deployed\",\r\n \"hidden\": false,\r\n \"immutable\": false,\r\n \"label\": \"SoftLayer Datacenter\",\r\n \"name\": \"datacenter\",\r\n \"required\": true,\r\n \"secured\": false,\r\n \"type\": \"string\",\r\n \"options\": [\r\n {\r\n \"value\": \"ams01\",\r\n \"label\": \"Amsterdam 01, The Netherlands\"\r\n },\r\n {\r\n \"value\": \"ams03\",\r\n \"label\": \"Amsterdam 03, The Netherlands\"\r\n },\r\n {\r\n \"value\": \"che01\",\r\n \"label\": \"Chennai, India\"\r\n },\r\n {\r\n \"value\": \"dal01\",\r\n \"label\": \"Dallas 01, USA\"\r\n },\r\n {\r\n \"value\": \"dal02\",\r\n \"label\": \"Dallas 02, USA\"\r\n },\r\n {\r\n \"value\": \"dal05\",\r\n \"label\": \"Dallas 05, USA\"\r\n },\r\n {\r\n \"value\": \"dal06\",\r\n \"label\": \"Dallas 06, USA\"\r\n },\r\n {\r\n \"value\": \"dal07\",\r\n \"label\": \"Dallas 07, USA\"\r\n },\r\n {\r\n \"value\": \"dal09\",\r\n \"label\": \"Dallas 09, USA\",\r\n \"default\": \"true\"\r\n },\r\n {\r\n \"value\": \"dal10\",\r\n \"label\": \"Dallas 10, USA\"\r\n },\r\n {\r\n \"value\": \"fra02\",\r\n \"label\": \"Frankfurt, Germany\"\r\n },\r\n {\r\n \"value\": \"hkg02\",\r\n \"label\": \"Hong Kong, China\"\r\n },\r\n {\r\n \"value\": \"hou02\",\r\n \"label\": \"Houston, USA\"\r\n },\r\n {\r\n \"value\": \"lon02\",\r\n \"label\": \"London, England\"\r\n },\r\n {\r\n \"value\": \"mel01\",\r\n \"label\": \"Melbourne, Australia\"\r\n },\r\n {\r\n \"value\": \"mil01\",\r\n \"label\": \"Milan, Italy\"\r\n },\r\n {\r\n \"value\": \"mon01\",\r\n \"label\": \"Montreal, Canada\"\r\n },\r\n {\r\n \"value\": \"osl01\",\r\n \"label\": \"Oslo, Norway\"\r\n },\r\n {\r\n \"value\": \"par01\",\r\n \"label\": \"Paris, France\"\r\n },\r\n {\r\n \"value\": \"mex01\",\r\n \"label\": \"Querétaro, Mexico\"\r\n },\r\n {\r\n \"value\": \"sjc01\",\r\n \"label\": \"San Jose 01, USA\"\r\n },\r\n {\r\n \"value\": \"sjc03\",\r\n \"label\": \"San Jose 03, USA\"\r\n },\r\n {\r\n \"value\": \"sao01\",\r\n \"label\": \"Sao Paulo, Brazil\"\r\n },\r\n {\r\n \"value\": \"sea01\",\r\n \"label\": \"Seattle, USA\"\r\n },\r\n {\r\n \"value\": \"seo01\",\r\n \"label\": \"Seoul 01, Korea\"\r\n },\r\n {\r\n \"value\": \"sng01\",\r\n \"label\": \"Singapore, Singapore\"\r\n },\r\n {\r\n \"value\": \"syd01\",\r\n \"label\": \"Sydney, Australia\"\r\n },\r\n {\r\n \"value\": \"tok02\",\r\n \"label\": \"Tokyo, Japan\"\r\n },\r\n {\r\n \"value\": \"tor01\",\r\n \"label\": \"Toronto, Canada\"\r\n },\r\n {\r\n \"value\": \"wdc01\",\r\n \"label\": \"Washington, D.C. 01, USA\"\r\n },\r\n {\r\n \"value\": \"wdc04\",\r\n \"label\": \"Washington, D.C. 04, USA\"\r\n }\r\n ],\r\n \"value\": \"dal09\"\r\n },\r\n {\r\n \"default\": \"debian-small\",\r\n \"description\": \"Hostname of the virtual instance (small flavor) to be deployed\",\r\n \"hidden\": false,\r\n \"immutable\": false,\r\n \"label\": \"Hostname\",\r\n \"name\": \"hostname\",\r\n \"required\": true,\r\n \"secured\": false,\r\n \"type\": \"string\",\r\n \"value\": \"postman-demo\"\r\n }\r\n ]\r\n}"
+				},
+				"url": {
+					"raw": "https://{{cam_host}}:30000/cam/api/v1/stacks?tenantId={{tenantId}}&ace_orgGuid={{teamId}}&cloudOE_spaceGuid={{namespaceId}}",
+					"protocol": "https",
+					"host": [
+						"{{cam_host}}"
+					],
+					"port": "30000",
+					"path": [
+						"cam",
+						"api",
+						"v1",
+						"stacks"
+					],
+					"query": [
+						{
+							"key": "tenantId",
+							"value": "{{tenantId}}",
+							"equals": true
+						},
+						{
+							"key": "ace_orgGuid",
+							"value": "{{teamId}}",
+							"equals": true
+						},
+						{
+							"key": "cloudOE_spaceGuid",
+							"value": "{{namespaceId}}",
+							"equals": true
+						}
+					]				},
+				"description": ""
+			},
+			"response": []		},
+		{
+			"name": "GET stack instance",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"type": "text/javascript",
+						"exec": [
+							"tests[\"Status code is 200\"] = responseCode.code === 200;",
+							"var responseJSON = JSON.parse(responseBody);",
+							""
+						]					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					},
+					{
+						"key": "Authorization",
+						"value": "{{CAMBearerToken}}"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": ""
+				},
+				"url": {
+					"raw": "https://{{cam_host}}:30000/cam/api/v1/stacks/{{ibmStackId}}/retrieve?tenantId={{tenantId}}&ace_orgGuid={{teamId}}&cloudOE_spaceGuid={{namespaceId}}",
+					"protocol": "https",
+					"host": [
+						"{{cam_host}}"
+					],
+					"port": "30000",
+					"path": [
+						"cam",
+						"api",
+						"v1",
+						"stacks",
+						"{{ibmStackId}}",
+						"retrieve"
+					],
+					"query": [
+						{
+							"key": "tenantId",
+							"value": "{{tenantId}}",
+							"equals": true
+						},
+						{
+							"key": "ace_orgGuid",
+							"value": "{{teamId}}",
+							"equals": true
+						},
+						{
+							"key": "cloudOE_spaceGuid",
+							"value": "{{namespaceId}}",
+							"equals": true
+						}
+					]				},
+				"description": ""
+			},
+			"response": []		}
+	]}
